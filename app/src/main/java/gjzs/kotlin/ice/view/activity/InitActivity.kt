@@ -4,10 +4,18 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.topjohnwu.superuser.Shell
 import gjzs.kotlin.ice.R
-import kotlin.concurrent.thread
 
 class InitActivity: AppCompatActivity() {
+
+    init {
+        Shell.setDefaultBuilder(
+            Shell.Builder.create()
+                .setFlags(Shell.FLAG_REDIRECT_STDERR)
+                .setTimeout(10)
+        )
+    }
 
     private lateinit var infoText: TextView
 
@@ -22,18 +30,20 @@ class InitActivity: AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.splash_layout)
         infoText = findViewById(R.id.splash_info)
-        thread {
-            addInfo("init start")
-            for (i in 1..100) {
-                addInfo("init ${i shl i} ${i shl i}")
-                Thread.sleep(50)
+
+        Shell.getShell { shell ->
+            if (shell.isRoot) {
+                addInfo("成功获取root权限")
+                gotoMain()
+            } else {
+                addInfo("获取root权限失败")
             }
-            Thread.sleep(1000)
-            addInfo("init end")
-            Thread.sleep(1000)
-            startActivity(Intent(this@InitActivity, MainActivity::class.java))
-            finish()
         }
+    }
+    
+    private fun gotoMain() {
+        startActivity(Intent(this, MainActivity::class.java))
+        finish()
     }
 
 }
